@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>HARS — Maison de Parfum</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Montserrat:wght@200;300;400&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--gold:#c8a96e;--gold-light:#e8d5a3;--cream:#f5f0e8;--dark:#0a0806}
+html{scroll-behavior:smooth}
+body{background:var(--dark);color:var(--cream);font-family:'Montserrat',sans-serif;overflow:hidden}
+
+#site-background{
+  position:fixed;inset:0;z-index:0;overflow:hidden;
+  background-color:var(--dark);will-change:transform;
+  transform:scale(1.04);animation:bgKenBurns 28s ease-in-out infinite alternate;
+}
+#site-background video{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;object-position:center center;
+  display:block;pointer-events:none;
+  filter:brightness(.82) saturate(1.05) contrast(1.04);
+}
+.cinematic-overlay{
+  position:fixed;inset:0;z-index:2;pointer-events:none;
+  background:
+    radial-gradient(ellipse 80% 75% at 50% 45%,transparent 45%,rgba(10,8,6,.28) 100%),
+    linear-gradient(to bottom,rgba(10,8,6,.35) 0%,rgba(10,8,6,.04) 38%,rgba(10,8,6,.3) 100%);
+}
+.cinematic-overlay::after{
+  content:'';position:absolute;inset:0;opacity:.025;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  background-size:200px 200px;
+}
+#fx-canvas{position:fixed;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;display:block}
+
+.slides{
+  position:relative;z-index:10;height:100vh;overflow-y:auto;
+  scroll-snap-type:y mandatory;scroll-behavior:smooth;
+  -webkit-overflow-scrolling:touch;
+}
+.slide{
+  min-height:100vh;scroll-snap-align:start;scroll-snap-stop:always;
+  display:flex;align-items:center;justify-content:center;
+  padding:100px clamp(24px,5vw,60px) 60px;
+}
+.slide-panel{
+  width:100%;max-width:1200px;
+  background:rgba(10,8,6,.58);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  border:1px solid rgba(200,169,110,.12);padding:clamp(40px,6vw,72px);
+}
+.slide-panel.wide{max-width:1280px}
+.slide-panel.center{text-align:center}
+.slide-panel.center .section-body{margin-left:auto;margin-right:auto}
+
+nav{
+  position:fixed;top:0;left:0;width:100%;z-index:200;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:28px clamp(24px,5vw,60px);
+  background:linear-gradient(to bottom,rgba(10,8,6,.75) 0%,transparent 100%);
+}
+.nav-logo{
+  font-family:'Cormorant Garamond',serif;font-size:clamp(20px,3vw,26px);
+  font-weight:300;letter-spacing:10px;color:var(--gold-light);text-transform:uppercase;
+}
+.nav-links{display:flex;gap:clamp(16px,3vw,36px)}
+.nav-links a{
+  font-size:9px;letter-spacing:3px;text-transform:uppercase;
+  color:rgba(245,240,232,.55);text-decoration:none;transition:color .4s ease;
+}
+.nav-links a:hover,.nav-links a.active{color:var(--gold)}
+
+.slide-dots{
+  position:fixed;right:28px;top:50%;transform:translateY(-50%);z-index:200;
+  display:flex;flex-direction:column;gap:12px;
+}
+.slide-dots button{
+  width:6px;height:6px;border-radius:50%;border:1px solid rgba(200,169,110,.4);
+  background:transparent;cursor:pointer;padding:0;transition:all .35s ease;
+}
+.slide-dots button.active{background:var(--gold);border-color:var(--gold);transform:scale(1.35)}
+
+.hero-content{text-align:center;width:100%}
+.hero-eyebrow{font-size:9px;letter-spacing:6px;text-transform:uppercase;color:var(--gold);margin-bottom:24px}
+.hero-title{
+  font-family:'Cormorant Garamond',serif;font-size:clamp(72px,14vw,140px);
+  font-weight:300;line-height:.9;letter-spacing:clamp(12px,3vw,20px);
+  text-transform:uppercase;color:var(--cream);
+  text-shadow:0 0 80px rgba(212,140,40,.35),0 4px 50px rgba(0,0,0,.85);
+}
+.hero-sub{
+  font-family:'Cormorant Garamond',serif;font-size:clamp(14px,2vw,18px);
+  font-style:italic;font-weight:300;letter-spacing:4px;color:var(--gold-light);margin-top:20px;
+  text-shadow:0 2px 20px rgba(0,0,0,.7);
+}
+.hero-cta{margin-top:48px}
+
+.section-tag{font-size:9px;letter-spacing:5px;text-transform:uppercase;color:var(--gold);margin-bottom:16px}
+.section-title{
+  font-family:'Cormorant Garamond',serif;font-size:clamp(32px,5vw,52px);
+  font-weight:300;line-height:1.1;color:var(--cream);
+}
+.section-title em{font-style:italic;color:var(--gold-light)}
+.section-body{
+  font-size:13px;font-weight:300;letter-spacing:1px;line-height:2;
+  color:rgba(245,240,232,.75);max-width:480px;margin-top:16px;
+}
+.divider{width:60px;height:1px;background:var(--gold);margin:28px 0}
+
+.btn{
+  display:inline-block;padding:14px 44px;font-size:9px;letter-spacing:4px;
+  text-transform:uppercase;text-decoration:none;cursor:pointer;border:none;
+  font-family:'Montserrat',sans-serif;transition:all .45s ease;
+}
+.btn-outline{
+  background:rgba(10,8,6,.4);border:1px solid var(--gold);color:var(--gold);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+}
+.btn-outline:hover{background:var(--gold);color:var(--dark)}
+
+/* ── STORY / MAISON ── */
+.story-grid{display:grid;grid-template-columns:minmax(280px,42%) 1fr;gap:clamp(40px,5vw,72px);align-items:center}
+.story-visual{
+  position:relative;aspect-ratio:4/5;max-height:520px;width:100%;
+  overflow:hidden;
+  box-shadow:0 40px 100px rgba(0,0,0,.6),inset 0 0 0 1px rgba(200,169,110,.1);
+}
+.story-visual-inner{width:100%;height:100%;position:relative;overflow:hidden;background:#030201}
+.portrait-frame{position:relative;width:100%;height:100%;overflow:hidden}
+
+/* ══════════════════════════════════════
+   MAISON SCENE — Industrial Metallic
+   Dark bg · Rose-gold/gold metals
+   Geometric structures · Hars brand
+══════════════════════════════════════ */
+.maison-scene{
+  position:absolute;inset:0;overflow:hidden;
+  background:radial-gradient(ellipse 120% 100% at 60% 50%,#0e0c0a 0%,#06040302 60%,#030201 100%);
+}
+
+/* Floor surface with subtle reflection */
+.maison-scene::before{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:38%;
+  background:linear-gradient(to top,#0a0806 0%,#141008 40%,transparent 100%);
+}
+/* Floor reflection glow */
+.maison-scene::after{
+  content:'';position:absolute;bottom:0;left:20%;right:20%;height:25%;
+  background:radial-gradient(ellipse,rgba(200,160,80,.12) 0%,transparent 70%);
+  filter:blur(10px);
+}
+
+/* ── DISPLAY BASE PLATFORM ── */
+.ms-platform{
+  position:absolute;bottom:30%;left:50%;transform:translateX(-50%);
+  width:82%;height:6px;
+  background:linear-gradient(to bottom,#3a2e18,#1e1a0e);
+  border-radius:1px;box-shadow:0 4px 20px rgba(0,0,0,.5);
+}
+.ms-platform::after{
+  content:'';position:absolute;top:-1px;left:0;right:0;height:1px;
+  background:linear-gradient(to right,transparent,rgba(200,169,110,.5),rgba(200,169,110,.8),rgba(200,169,110,.5),transparent);
+}
+
+/* ── LARGE CIRCULAR DISC BOTTLE (center) ── */
+.ms-disc{
+  position:absolute;bottom:36%;left:50%;transform:translateX(-50%);
+  width:110px;height:110px;border-radius:50%;
+  background:
+    conic-gradient(from 120deg,rgba(180,140,60,.2) 0deg,rgba(200,160,80,.5) 60deg,rgba(240,210,140,.7) 90deg,rgba(200,160,80,.5) 120deg,rgba(140,100,40,.4) 180deg,rgba(180,140,60,.3) 240deg,rgba(220,180,100,.6) 300deg,rgba(180,140,60,.2) 360deg);
+  border:1px solid rgba(200,169,110,.45);
+  box-shadow:0 0 30px rgba(200,150,60,.15),inset 0 0 20px rgba(0,0,0,.4);
+}
+/* Disc inner mirror surface */
+.ms-disc::before{
+  content:'';position:absolute;inset:8px;border-radius:50%;
+  background:radial-gradient(circle at 38% 36%,rgba(255,240,200,.15) 0%,rgba(30,22,10,.85) 55%,rgba(10,8,5,.95) 100%);
+  border:1px solid rgba(200,169,110,.2);
+}
+/* Disc neck connector */
+.ms-disc::after{
+  content:'';position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);
+  width:14px;height:20px;
+  background:linear-gradient(to right,rgba(180,140,60,.6),rgba(220,180,90,.8),rgba(180,140,60,.6));
+  border-radius:1px;
+}
+/* Disc top sprayer */
+.ms-disc-top{
+  position:absolute;bottom:calc(36% + 108px);left:50%;transform:translateX(-50%);
+  width:10px;height:18px;
+  background:linear-gradient(to right,rgba(160,120,50,.7),rgba(210,170,80,.9),rgba(160,120,50,.7));
+  border-radius:1px 1px 0 0;
+}
+.ms-disc-cap{
+  position:absolute;bottom:calc(36% + 124px);left:50%;transform:translateX(-50%);
+  width:22px;height:10px;
+  background:linear-gradient(135deg,rgba(200,160,70,.8),rgba(240,200,100,.9),rgba(200,160,70,.7));
+  border-radius:2px;border:1px solid rgba(220,180,90,.5);
+}
+
+/* ── LEFT ARCHITECTURAL FRAME STRUCTURE ── */
+.ms-frame-l{
+  position:absolute;bottom:36%;left:12%;width:60px;height:80px;
+}
+/* Vertical left post */
+.ms-frame-l::before{
+  content:'';position:absolute;left:0;bottom:0;width:4px;height:100%;
+  background:linear-gradient(to top,rgba(160,100,50,.9),rgba(200,140,70,.8),rgba(160,100,50,.6));
+  border-radius:1px;
+}
+/* Vertical right post */
+.ms-frame-l::after{
+  content:'';position:absolute;right:0;bottom:0;width:4px;height:100%;
+  background:linear-gradient(to top,rgba(160,100,50,.9),rgba(200,140,70,.8),rgba(160,100,50,.6));
+  border-radius:1px;
+}
+/* Cross beam */
+.ms-frame-cross{
+  position:absolute;bottom:calc(36% + 40px);left:12%;width:60px;height:3px;
+  background:linear-gradient(to right,rgba(160,100,50,.9),rgba(220,160,80,.8),rgba(160,100,50,.9));
+}
+/* Diagonal brace */
+.ms-frame-diag{
+  position:absolute;bottom:36%;left:12%;width:60px;height:80px;overflow:hidden;
+}
+.ms-frame-diag::before{
+  content:'';position:absolute;left:-5px;bottom:-5px;
+  width:72px;height:90px;
+  border-left:3px solid transparent;border-bottom:3px solid transparent;
+  border-image:linear-gradient(to top right,rgba(180,120,60,.7),rgba(210,160,70,.5)) 1;
+  transform:skewX(-36deg);
+}
+
+/* ── RIGHT RING STRUCTURE ── */
+.ms-ring{
+  position:absolute;bottom:36%;right:10%;width:55px;height:60px;
+  border-radius:50%;border:5px solid transparent;
+  background:
+    linear-gradient(#0a0806,#0a0806) padding-box,
+    conic-gradient(from 0deg,rgba(160,110,50,.6),rgba(220,170,80,.9),rgba(200,150,60,.7),rgba(160,110,50,.6)) border-box;
+}
+.ms-ring::before{
+  content:'';position:absolute;inset:8px;border-radius:50%;
+  border:2px solid rgba(200,160,70,.3);
+}
+/* Ring stand */
+.ms-ring::after{
+  content:'';position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);
+  width:20px;height:20px;
+  background:linear-gradient(to bottom,rgba(180,130,55,.7),rgba(140,100,40,.5));
+  clip-path:polygon(20% 0%,80% 0%,100% 100%,0% 100%);
+}
+
+/* ── SMALL CYLINDER BOTTLES (center group) ── */
+.ms-cylinders{
+  position:absolute;bottom:36%;left:50%;transform:translateX(-20%);
+  display:flex;gap:6px;align-items:flex-end;
+}
+.ms-cyl{
+  border-radius:3px 3px 1px 1px;position:relative;
+  background:linear-gradient(to right,rgba(140,90,40,.6),rgba(200,150,70,.8),rgba(180,130,55,.6));
+  border:1px solid rgba(200,160,70,.4);
+}
+.ms-cyl::before{
+  content:'';position:absolute;left:15%;top:5%;width:15%;bottom:5%;
+  background:linear-gradient(to bottom,rgba(255,255,255,.25),transparent);border-radius:1px;
+}
+.ms-cyl1{width:14px;height:38px}
+.ms-cyl2{width:12px;height:30px}
+.ms-cyl3{width:10px;height:24px}
+
+/* ── TALL BOTTLE LEFT OF DISC ── */
+.ms-tall{
+  position:absolute;bottom:36%;left:30%;width:22px;height:70px;
+  background:linear-gradient(to right,rgba(120,80,35,.5),rgba(180,130,60,.7),rgba(200,150,70,.75),rgba(160,115,50,.6));
+  border:1px solid rgba(200,160,70,.35);border-radius:3px 3px 1px 1px;
+}
+.ms-tall::before{
+  content:'';position:absolute;left:15%;top:5%;width:15%;bottom:5%;
+  background:linear-gradient(to bottom,rgba(255,255,255,.3),transparent);border-radius:1px;
+}
+/* Tall bottle cap */
+.ms-tall::after{
+  content:'';position:absolute;top:-10px;left:50%;transform:translateX(-50%);
+  width:14px;height:12px;
+  background:linear-gradient(135deg,rgba(180,130,55,.9),rgba(220,170,80,.95),rgba(180,130,55,.8));
+  border-radius:2px;border:1px solid rgba(220,180,90,.4);
+}
+
+/* ── WIDE BOTTLE RIGHT OF DISC ── */
+.ms-wide{
+  position:absolute;bottom:36%;right:25%;width:30px;height:55px;
+  background:linear-gradient(to right,rgba(130,85,38,.5),rgba(190,140,65,.7),rgba(210,160,75,.75),rgba(170,120,52,.6));
+  border:1px solid rgba(200,160,70,.35);border-radius:4px 4px 2px 2px;
+}
+.ms-wide::before{
+  content:'';position:absolute;left:12%;top:5%;width:12%;bottom:5%;
+  background:linear-gradient(to bottom,rgba(255,255,255,.28),transparent);border-radius:1px;
+}
+.ms-wide::after{
+  content:'';position:absolute;top:-8px;left:50%;transform:translateX(-50%);
+  width:16px;height:9px;
+  background:linear-gradient(135deg,rgba(180,130,55,.9),rgba(220,170,80,.95));
+  border-radius:2px;border:1px solid rgba(220,180,90,.4);
+}
+
+/* ── SMALL LEFT BOTTLES ── */
+.ms-sm-l{
+  position:absolute;bottom:36%;left:18%;
+  display:flex;gap:5px;align-items:flex-end;
+}
+.ms-sm{
+  border-radius:2px;position:relative;
+  background:linear-gradient(to right,rgba(120,80,35,.55),rgba(185,140,65,.75),rgba(165,120,50,.6));
+  border:1px solid rgba(190,150,65,.3);
+}
+.ms-sm::before{
+  content:'';position:absolute;left:18%;top:8%;width:14%;bottom:8%;
+  background:rgba(255,255,255,.2);border-radius:1px;
+}
+.ms-sm1{width:11px;height:28px}
+.ms-sm2{width:9px;height:22px}
+
+/* ── AMBIENT STUDIO LIGHT ── */
+.ms-light-top{
+  position:absolute;top:-5%;left:55%;width:200px;height:70%;
+  background:linear-gradient(160deg,rgba(200,155,65,.12) 0%,rgba(180,135,55,.06) 35%,transparent 65%);
+  transform:rotate(-10deg);filter:blur(20px);pointer-events:none;
+}
+.ms-light-side{
+  position:absolute;top:20%;right:0;width:30%;height:60%;
+  background:linear-gradient(to left,rgba(200,155,65,.08) 0%,transparent 70%);
+  filter:blur(15px);pointer-events:none;
+}
+
+/* ── HARS BRAND TEXT ON SCENE ── */
+.ms-brand{
+  position:absolute;top:10%;left:8%;
+  font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;
+  letter-spacing:8px;text-transform:uppercase;
+  color:rgba(200,169,110,.65);
+  text-shadow:0 0 20px rgba(200,150,60,.3);
+}
+.ms-tagline{
+  position:absolute;top:calc(10% + 30px);left:8%;
+  font-family:'Cormorant Garamond',serif;font-size:9px;font-style:italic;
+  letter-spacing:3px;color:rgba(200,169,110,.4);
+}
+
+/* ── CINEMATIC PORTRAIT FX ── */
+.portrait-cine-key{
+  position:absolute;inset:0;z-index:8;pointer-events:none;
+  background:
+    radial-gradient(ellipse 40% 34% at 50% 42%,rgba(255,200,120,.25) 0%,transparent 72%),
+    radial-gradient(ellipse 80% 60% at 50% 50%,transparent 30%,rgba(3,2,1,.12) 100%);
+  mix-blend-mode:soft-light;
+}
+.portrait-cine-amber{
+  position:absolute;inset:0;z-index:9;pointer-events:none;
+  background:
+    linear-gradient(160deg,rgba(200,150,70,.18) 0%,transparent 42%),
+    linear-gradient(to bottom,rgba(180,120,40,.12) 0%,transparent 30%);
+  mix-blend-mode:color-dodge;opacity:.4;
+}
+.portrait-cine-shadow{
+  position:absolute;inset:0;z-index:10;pointer-events:none;
+  background:
+    linear-gradient(90deg,rgba(3,2,1,.35) 0%,transparent 20%),
+    linear-gradient(270deg,rgba(3,2,1,.35) 0%,transparent 20%),
+    linear-gradient(to top,rgba(3,2,1,.75) 0%,transparent 42%);
+}
+.portrait-cine-vignette{
+  position:absolute;inset:0;z-index:11;pointer-events:none;
+  background:radial-gradient(ellipse 78% 74% at 50% 42%,transparent 22%,rgba(3,2,1,.8) 100%);
+}
+.portrait-cine-grain{
+  position:absolute;inset:0;z-index:12;pointer-events:none;opacity:.04;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  background-size:220px 220px;
+}
+.portrait-caption{
+  position:absolute;bottom:24px;left:20px;z-index:13;pointer-events:none;
+  font-size:7px;letter-spacing:6px;text-transform:uppercase;color:rgba(200,169,110,.45);
+  writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);
+  text-shadow:0 1px 8px rgba(0,0,0,.6);
+}
+.story-border{
+  position:absolute;inset:10px;border:1px solid rgba(200,169,110,.32);
+  pointer-events:none;z-index:14;
+}
+.story-border::before{content:'';position:absolute;inset:4px;border:1px solid rgba(200,169,110,.08)}
+
+/* ── COLLECTION ── */
+.collection-header{margin-bottom:48px}
+.collection-header .divider{margin:24px auto 0}
+.fragrance-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(16px,3vw,28px)}
+.fragrance-card{
+  position:relative;padding:36px 24px 28px;text-align:center;
+  background:rgba(10,8,6,.45);border:1px solid rgba(200,169,110,.15);
+  transition:transform .6s cubic-bezier(.25,.46,.45,.94),border-color .4s ease,box-shadow .4s ease;
+}
+.fragrance-card:hover{
+  transform:translateY(-8px);border-color:rgba(200,169,110,.35);
+  box-shadow:0 24px 60px rgba(0,0,0,.4),0 0 40px rgba(200,169,110,.08);
+}
+.fragrance-label{font-family:'Cormorant Garamond',serif;font-size:10px;letter-spacing:4px;text-transform:uppercase;color:rgba(200,169,110,.65);margin-bottom:20px}
+.bottle-stage{height:200px;display:flex;align-items:flex-end;justify-content:center;margin-bottom:24px;position:relative}
+.bottle-stage::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:70%;height:20px;border-radius:50%;background:radial-gradient(ellipse,rgba(200,169,110,.15),transparent 70%)}
+.fc-bottle{position:relative;display:inline-block;filter:drop-shadow(0 12px 24px rgba(0,0,0,.5))}
+.fc-neck{position:absolute;top:0;left:50%;transform:translateX(-50%);width:14%;height:18%;background:linear-gradient(to right,rgba(255,255,255,.15),rgba(255,255,255,.05),rgba(0,0,0,.1));border-radius:2px}
+.fc-cap{position:absolute;top:-8%;left:50%;transform:translateX(-50%);border-radius:3px 3px 1px 1px}
+.fc-body{position:relative;border-radius:6px 6px 4px 4px;overflow:hidden;margin:0 auto}
+.fc-body::before{content:'';position:absolute;left:8%;top:6%;width:12%;height:80%;background:linear-gradient(to bottom,rgba(255,255,255,.35),rgba(255,255,255,.05));border-radius:2px;z-index:2}
+.fc-body::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.12) 0%,transparent 45%,rgba(0,0,0,.08) 100%);z-index:2}
+.b1 .fc-bottle{width:56px;height:160px;margin-top:24px}
+.b1 .fc-neck{height:22%;width:18%}
+.b1 .fc-cap{width:28px;height:14px;background:linear-gradient(to bottom,#8a6820,#5a4010)}
+.b1 .fc-body{width:56px;height:130px;background:linear-gradient(160deg,rgba(220,180,100,.55),rgba(160,100,40,.65),rgba(120,70,25,.7));border:1px solid rgba(220,190,130,.35)}
+.b2 .fc-bottle{width:48px;height:150px;margin-top:28px}
+.b2 .fc-cap{width:22px;height:12px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#c8a96e,#7a5820)}
+.b2 .fc-body{width:48px;height:120px;background:linear-gradient(160deg,rgba(240,180,180,.35),rgba(200,100,120,.45),rgba(160,60,90,.5));border:1px solid rgba(230,180,190,.3);border-radius:8px 8px 4px 4px}
+.b3 .fc-bottle{width:52px;height:155px;margin-top:26px}
+.b3 .fc-cap{width:24px;height:16px;background:linear-gradient(to bottom,#1a1408,#3a3020);border-radius:2px}
+.b3 .fc-body{width:52px;height:125px;background:linear-gradient(160deg,rgba(255,250,230,.25),rgba(220,200,150,.35),rgba(180,160,100,.4));border:1px solid rgba(240,220,170,.35)}
+.fragrance-name{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;letter-spacing:3px;color:var(--cream);margin-bottom:8px}
+.fragrance-notes{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:14px}
+.fragrance-price{font-size:12px;letter-spacing:2px;color:rgba(245,240,232,.7)}
+
+.boutique-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+.boutique-detail{text-align:right}
+.boutique-address{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:300;font-style:italic;color:var(--gold-light);letter-spacing:2px;margin-bottom:8px}
+.boutique-city{font-size:9px;letter-spacing:5px;text-transform:uppercase;color:rgba(245,240,232,.55)}
+.contact-grid{display:grid;grid-template-columns:1fr 1.2fr;gap:48px;align-items:start}
+.contact-brand .footer-brand{font-family:'Cormorant Garamond',serif;font-size:42px;font-weight:300;letter-spacing:12px;color:var(--gold);display:block;margin-bottom:12px}
+.contact-tagline{font-size:11px;letter-spacing:3px;font-style:italic;color:rgba(245,240,232,.45);margin-bottom:32px}
+.contact-list{display:grid;gap:20px}
+.contact-item h4{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
+.contact-item p,.contact-item a{font-size:13px;font-weight:300;letter-spacing:1px;line-height:1.8;color:rgba(245,240,232,.7);text-decoration:none;transition:color .3s}
+.contact-item a:hover{color:var(--cream)}
+.contact-socials{display:flex;gap:24px;margin-top:32px;flex-wrap:wrap}
+.contact-socials a{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:rgba(245,240,232,.5);text-decoration:none;transition:color .3s}
+.contact-socials a:hover{color:var(--gold)}
+.contact-copy{font-size:10px;letter-spacing:2px;color:rgba(245,240,232,.35);margin-top:40px;padding-top:24px;border-top:1px solid rgba(200,169,110,.1)}
+
+.slide-enter{opacity:0;transform:translateY(40px);transition:opacity .9s ease,transform .9s ease}
+.slide.is-active .slide-enter{opacity:1;transform:translateY(0)}
+.slide.is-active .slide-enter:nth-child(2){transition-delay:.12s}
+.slide.is-active .slide-enter:nth-child(3){transition-delay:.24s}
+@keyframes bgKenBurns{0%{transform:scale(1.04) translate(0,0)}100%{transform:scale(1.09) translate(0,-0.6%)}}
+@keyframes bottleGlow{0%,100%{box-shadow:0 0 30px rgba(200,140,40,.2)}50%{box-shadow:0 0 50px rgba(200,140,40,.35)}}
+.bottle-wrap{animation:bottleGlow 4s ease-in-out infinite}
+
+@media(max-width:900px){
+  .story-grid{grid-template-columns:1fr;gap:32px}
+  .story-visual{max-height:440px;margin:0 auto;max-width:360px}
+  .boutique-grid,.contact-grid{grid-template-columns:1fr;gap:32px}
+  .boutique-detail{text-align:center}
+  .fragrance-grid{grid-template-columns:1fr;max-width:320px;margin:0 auto}
+  .slide-dots{right:14px}
+}
+@media(max-width:768px){
+  .nav-links a{font-size:8px;letter-spacing:2px}
+  .slide{padding:90px 20px 48px}
+}
+@media(prefers-reduced-motion:reduce){
+  #site-background,.slide-enter,.bottle-wrap{animation:none;transition:none}
+  #site-background{transform:scale(1.04)}
+  .slide-enter{opacity:1;transform:none}
+}
+</style>
+</head>
+<body>
+
+<div id="site-background" aria-hidden="true">
+  <video id="bg-video" autoplay muted loop playsinline preload="auto">
+    <source src="RV.mp4" type="video/mp4"/>
+  </video>
+</div>
+<canvas id="fx-canvas" aria-hidden="true"></canvas>
+<div class="cinematic-overlay" aria-hidden="true"></div>
+
+<nav>
+  <div class="nav-logo">Hars</div>
+  <div class="nav-links">
+    <a href="#home" data-slide="0">Home</a>
+    <a href="#maison" data-slide="1">Maison</a>
+    <a href="#collection" data-slide="2">Collection</a>
+    <a href="#boutique" data-slide="3">Boutique</a>
+    <a href="#contact" data-slide="4">Contact</a>
+  </div>
+</nav>
+
+<div class="slide-dots" id="slide-dots" aria-label="Slide navigation"></div>
+
+<main class="slides" id="slides">
+
+  <!-- SLIDE 1 · HOME -->
+  <section class="slide is-active" id="home" data-index="0">
+    <div class="hero-content slide-enter">
+      <p class="hero-eyebrow">Maison de Parfum · Est. 2024</p>
+      <h1 class="hero-title">HARS</h1>
+      <p class="hero-sub">where scent becomes memory</p>
+      <div class="hero-cta">
+        <a href="#collection" class="btn btn-outline" data-slide="2">Discover the Collection</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 2 · MAISON -->
+  <section class="slide" id="maison" data-index="1">
+    <div class="slide-panel wide">
+      <div class="story-grid">
+
+        <div class="story-visual slide-enter">
+          <div class="story-visual-inner">
+            <div class="portrait-frame">
+
+              <div class="maison-scene">
+                <div class="ms-light-top"></div>
+                <div class="ms-light-side"></div>
+                <div class="ms-brand">HARS</div>
+                <div class="ms-tagline">Maison de Parfum · Pune</div>
+                <div class="ms-frame-l"></div>
+                <div class="ms-frame-cross"></div>
+                <div class="ms-frame-diag"></div>
+                <div class="ms-disc-cap"></div>
+                <div class="ms-disc-top"></div>
+                <div class="ms-disc"></div>
+                <div class="ms-tall"></div>
+                <div class="ms-wide"></div>
+                <div class="ms-ring"></div>
+                <div class="ms-sm-l">
+                  <div class="ms-sm ms-sm1"></div>
+                  <div class="ms-sm ms-sm2"></div>
+                </div>
+                <div class="ms-cylinders">
+                  <div class="ms-cyl ms-cyl1"></div>
+                  <div class="ms-cyl ms-cyl2"></div>
+                  <div class="ms-cyl ms-cyl3"></div>
+                </div>
+                <div class="ms-platform"></div>
+              </div>
+
+              <div class="portrait-cine-key" aria-hidden="true"></div>
+              <div class="portrait-cine-amber" aria-hidden="true"></div>
+              <div class="portrait-cine-shadow" aria-hidden="true"></div>
+              <div class="portrait-cine-vignette" aria-hidden="true"></div>
+              <div class="portrait-cine-grain" aria-hidden="true"></div>
+            </div>
+            <p class="portrait-caption">HARS · Maison</p>
+          </div>
+          <div class="story-border"></div>
+        </div>
+
+        <div class="slide-enter">
+          <p class="section-tag">Our Philosophy</p>
+          <h2 class="section-title">Crafted with<br/><em>intention.</em></h2>
+          <div class="divider"></div>
+          <p class="section-body">At Hars, we believe a fragrance is more than a scent — it is an emotion crystallised in time. Each bottle is a dialogue between the perfumer's vision and the wearer's soul.</p>
+          <p class="section-body" style="margin-top:12px">We source only the finest ingredients — hand-harvested Bulgarian rose, aged Indian oud, Madagascan vanilla — and compose with slow, deliberate artistry from our atelier in Pune.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 3 · COLLECTION -->
+  <section class="slide" id="collection" data-index="2">
+    <div class="slide-panel wide center">
+      <div class="collection-header slide-enter">
+        <p class="section-tag">Rare &amp; Precious</p>
+        <h2 class="section-title">The <em>Signature</em> Collection</h2>
+        <div class="divider"></div>
+        <p class="section-body">Three exceptional compositions — the most coveted scents from our atelier, presented in hand-finished glass.</p>
+      </div>
+      <div class="fragrance-grid">
+        <article class="fragrance-card slide-enter b1">
+          <p class="fragrance-label">No. 01</p>
+          <div class="bottle-stage">
+            <img src="https://images.pexels.com/photos/29805437/pexels-photo-29805437.jpeg?auto=compress&cs=tinysrgb&w=400&h=560&fit=crop" alt="Amber Nuit" style="height:185px;width:auto;object-fit:contain;filter:drop-shadow(0 16px 32px rgba(0,0,0,.6));"/>
+          </div>
+          <h3 class="fragrance-name">Amber Nuit</h3>
+          <p class="fragrance-notes">Oud · Amber · Vanilla</p>
+          <p class="fragrance-price">₹ 12,400 · 50ml EDP</p>
+        </article>
+        <article class="fragrance-card slide-enter b2">
+          <p class="fragrance-label">No. 02</p>
+          <div class="bottle-stage">
+            <img src="https://images.pexels.com/photos/1961792/pexels-photo-1961792.jpeg?auto=compress&cs=tinysrgb&w=400&h=560&fit=crop" alt="Rose Sauvage" style="height:185px;width:auto;object-fit:contain;filter:drop-shadow(0 16px 32px rgba(0,0,0,.6));"/>
+          </div>
+          <h3 class="fragrance-name">Rose Sauvage</h3>
+          <p class="fragrance-notes">Bulgarian Rose · Iris · Musk</p>
+          <p class="fragrance-price">₹ 11,800 · 50ml EDP</p>
+        </article>
+        <article class="fragrance-card slide-enter b3">
+          <p class="fragrance-label">No. 03</p>
+          <div class="bottle-stage">
+            <img src="https://images.pexels.com/photos/2814832/pexels-photo-2814832.jpeg?auto=compress&cs=tinysrgb&w=400&h=560&fit=crop" alt="Or Blanc" style="height:185px;width:auto;object-fit:contain;filter:drop-shadow(0 16px 32px rgba(0,0,0,.6));"/>
+          </div>
+          <h3 class="fragrance-name">Or Blanc</h3>
+          <p class="fragrance-notes">Saffron · Vetiver · Cedar</p>
+          <p class="fragrance-price">₹ 13,200 · 50ml EDP</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 4 · BOUTIQUE -->
+  <section class="slide" id="boutique" data-index="3">
+    <div class="slide-panel wide">
+      <div class="boutique-grid">
+        <div class="slide-enter">
+          <p class="section-tag">Visit Us</p>
+          <h2 class="section-title">The <em>Hars</em> Boutique</h2>
+          <div class="divider"></div>
+          <p class="section-body">Step into our atelier — where brutalist concrete meets lush botanicals. Experience every fragrance in its full depth before it becomes yours.</p>
+          <a href="#contact" class="btn btn-outline" style="margin-top:32px;display:inline-block" data-slide="4">Book a Visit</a>
+        </div>
+        <div class="boutique-detail slide-enter">
+          <p class="boutique-address">Open Tuesday – Sunday</p>
+          <p class="boutique-city">11:00 — 19:00 IST</p>
+          <p class="boutique-address" style="margin-top:24px">Koregaon Park, Pune</p>
+          <p class="boutique-city">Maharashtra, India</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLIDE 5 · CONTACT -->
+  <section class="slide" id="contact" data-index="4">
+    <div class="slide-panel wide">
+      <div class="contact-grid">
+        <div class="slide-enter">
+          <div class="contact-brand"><span class="footer-brand">HARS</span></div>
+          <p class="contact-tagline">where scent becomes memory</p>
+          <p class="section-body">For private consultations, bespoke gifting, or wholesale enquiries — our maison welcomes you.</p>
+        </div>
+        <div class="slide-enter">
+          <div class="contact-list">
+            <div class="contact-item">
+              <h4>Boutique</h4>
+              <p>Koregaon Park, Pune<br/>Maharashtra, India</p>
+            </div>
+            <div class="contact-item">
+              <h4>Enquiries</h4>
+              <a href="mailto:hello@hars.in">hello@hars.in</a><br/>
+              <a href="tel:+919876543210">+91 98765 43210</a>
+            </div>
+            <div class="contact-item">
+              <h4>Hours</h4>
+              <p>Tuesday – Sunday<br/>11:00 — 19:00 IST</p>
+            </div>
+          </div>
+          <div class="contact-socials">
+            <a href="#">Instagram</a>
+            <a href="#">Pinterest</a>
+            <a href="#">WhatsApp</a>
+          </div>
+          <p class="contact-copy">© 2024 Hars Maison de Parfum. All rights reserved.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script>
+(function(){
+const siteBg=document.getElementById('site-background');
+const bgVideo=document.getElementById('bg-video');
+const canvas=document.getElementById('fx-canvas');
+const slidesEl=document.getElementById('slides');
+const slideSections=[...document.querySelectorAll('.slide')];
+const navLinks=[...document.querySelectorAll('.nav-links a')];
+const dotsContainer=document.getElementById('slide-dots');
+const prefersReduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const isMobile=window.innerWidth<768;
+if(bgVideo){
+  bgVideo.muted=true;
+  if(prefersReduced){bgVideo.pause();bgVideo.removeAttribute('autoplay')}
+  else{
+    const playBg=()=>bgVideo.play().catch(()=>{});
+    playBg();
+    document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!prefersReduced)playBg()});
+    window.addEventListener('pointerdown',playBg,{once:true});
+  }
+}
+slideSections.forEach((_,i)=>{
+  const dot=document.createElement('button');
+  dot.type='button';dot.setAttribute('aria-label',`Go to slide ${i+1}`);
+  dot.addEventListener('click',()=>goToSlide(i));dotsContainer.appendChild(dot);
+});
+const dots=[...dotsContainer.querySelectorAll('button')];
+function goToSlide(index){const t=slideSections[index];if(t)t.scrollIntoView({behavior:prefersReduced?'auto':'smooth'})}
+function setActiveSlide(index){
+  slideSections.forEach((s,i)=>s.classList.toggle('is-active',i===index));
+  navLinks.forEach((a,i)=>a.classList.toggle('active',i===index));
+  dots.forEach((d,i)=>d.classList.toggle('active',i===index));
+}
+document.querySelectorAll('[data-slide]').forEach(el=>{
+  el.addEventListener('click',e=>{e.preventDefault();goToSlide(parseInt(el.dataset.slide,10))});
+});
+navLinks.forEach((a,i)=>{a.addEventListener('click',e=>{e.preventDefault();goToSlide(i)})});
+const slideObserver=new IntersectionObserver(entries=>{
+  entries.forEach(entry=>{if(entry.isIntersecting)setActiveSlide(parseInt(entry.target.dataset.index,10))});
+},{root:slidesEl,threshold:0.55});
+slideSections.forEach(s=>slideObserver.observe(s));
+setActiveSlide(0);
+let wheelLock=false;
+slidesEl.addEventListener('wheel',e=>{
+  if(prefersReduced||wheelLock)return;
+  const idx=slideSections.findIndex(s=>s.classList.contains('is-active'));
+  if(e.deltaY>30&&idx<slideSections.length-1){e.preventDefault();wheelLock=true;goToSlide(idx+1);setTimeout(()=>{wheelLock=false},900)}
+  else if(e.deltaY<-30&&idx>0){e.preventDefault();wheelLock=true;goToSlide(idx-1);setTimeout(()=>{wheelLock=false},900)}
+},{passive:false});
+if(!window.THREE)return;
+const THREE=window.THREE;
+const renderer=new THREE.WebGLRenderer({canvas,antialias:!isMobile,alpha:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,isMobile?1.5:2));
+renderer.setSize(window.innerWidth,window.innerHeight);
+renderer.setClearColor(0x000000,0);
+const scene=new THREE.Scene();
+const camera=new THREE.PerspectiveCamera(42,window.innerWidth/window.innerHeight,0.1,50);
+camera.position.set(0,0,5);
+const petalColors=['#e8a0a8','#f0c878','#d47080','#f5e8d0','#c85878'];
+function createPetalTexture(hex){
+  const c=document.createElement('canvas');c.width=64;c.height=64;
+  const ctx=c.getContext('2d');ctx.save();ctx.translate(32,32);ctx.rotate(Math.PI/6);
+  const grad=ctx.createRadialGradient(0,0,0,0,0,28);
+  grad.addColorStop(0,hex);grad.addColorStop(0.65,hex+'bb');grad.addColorStop(1,hex+'00');
+  ctx.fillStyle=grad;ctx.beginPath();ctx.ellipse(0,0,22,10,0,0,Math.PI*2);ctx.fill();
+  ctx.restore();return new THREE.CanvasTexture(c);
+}
+const petalCount=isMobile?22:prefersReduced?0:45;
+const petalMeshes=[],petalData=[];
+for(let i=0;i<petalCount;i++){
+  const mat=new THREE.SpriteMaterial({map:createPetalTexture(petalColors[i%5]),transparent:true,opacity:0.45+Math.random()*0.3,depthWrite:false});
+  const sprite=new THREE.Sprite(mat);
+  const scale=0.07+Math.random()*0.1;sprite.scale.set(scale,scale*0.6,1);
+  sprite.position.set((Math.random()-0.5)*6,Math.random()*5+1,(Math.random()-0.5)*1.5);
+  scene.add(sprite);petalMeshes.push(sprite);
+  petalData.push({speedY:0.003+Math.random()*0.004,driftX:(Math.random()-0.5)*0.002,rotSpeed:(Math.random()-0.5)*0.012,wobble:Math.random()*Math.PI*2,wobbleSpeed:0.3+Math.random()*0.5});
+}
+const dustCount=isMobile?30:prefersReduced?0:70;
+const dustPositions=new Float32Array(dustCount*3);
+const dustVelocities=[];
+for(let i=0;i<dustCount;i++){
+  dustPositions[i*3]=(Math.random()-0.5)*2.5;dustPositions[i*3+1]=Math.random()*4-1;dustPositions[i*3+2]=(Math.random()-0.5)*0.8;
+  dustVelocities.push({x:(Math.random()-0.5)*0.0004,y:(Math.random()-0.5)*0.0003,phase:Math.random()*Math.PI*2});
+}
+const dustGeo=new THREE.BufferGeometry();
+dustGeo.setAttribute('position',new THREE.BufferAttribute(dustPositions,3));
+scene.add(new THREE.Points(dustGeo,new THREE.PointsMaterial({color:0xf0d090,size:isMobile?0.022:0.016,transparent:true,opacity:0.35,depthWrite:false,blending:THREE.AdditiveBlending,sizeAttenuation:true})));
+let mouseX=0,mouseY=0,targetMouseX=0,targetMouseY=0,elapsed=0,lastTime=performance.now(),visible=true;
+window.addEventListener('mousemove',e=>{targetMouseX=(e.clientX/window.innerWidth-0.5)*2;targetMouseY=(e.clientY/window.innerHeight-0.5)*2});
+window.addEventListener('touchmove',e=>{if(e.touches[0]){targetMouseX=(e.touches[0].clientX/window.innerWidth-0.5)*2;targetMouseY=(e.touches[0].clientY/window.innerHeight-0.5)*2}},{passive:true});
+document.addEventListener('visibilitychange',()=>{visible=!document.hidden});
+function resize(){const w=window.innerWidth,h=window.innerHeight;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h);renderer.setPixelRatio(Math.min(window.devicePixelRatio,w<768?1.5:2))}
+window.addEventListener('resize',resize);resize();
+function animate(now){
+  requestAnimationFrame(animate);if(!visible)return;
+  const delta=Math.min((now-lastTime)/1000,0.05);lastTime=now;
+  if(!prefersReduced){
+    elapsed+=delta;mouseX+=(targetMouseX-mouseX)*0.03;mouseY+=(targetMouseY-mouseY)*0.03;
+    const activeIdx=slideSections.findIndex(s=>s.classList.contains('is-active'));
+    const scrollNorm=activeIdx/(slideSections.length-1||1);
+    const dolly=(Math.sin(elapsed*0.06)+1)*0.5;const push=dolly*0.07+scrollNorm*0.05;
+    siteBg.style.transform=`scale(${1.04+push}) translate(${mouseX*0.16}%,${-mouseY*0.1-push*0.8}%)`;
+    camera.position.z=5.1-dolly*0.4-scrollNorm*0.3;camera.position.x=mouseX*0.08;camera.position.y=-mouseY*0.04;
+    for(let i=0;i<petalMeshes.length;i++){
+      const p=petalMeshes[i],d=petalData[i];
+      p.position.y-=d.speedY;p.position.x+=d.driftX+Math.sin(elapsed*d.wobbleSpeed+d.wobble)*0.001;
+      p.material.rotation+=d.rotSpeed;
+      if(p.position.y<-2.8){p.position.y=3.5+Math.random();p.position.x=(Math.random()-0.5)*6}
+    }
+    const dustPos=dustGeo.attributes.position.array;
+    for(let i=0;i<dustCount;i++){
+      const v=dustVelocities[i],i3=i*3;
+      dustPos[i3]+=v.x+Math.sin(elapsed*0.5+v.phase)*0.0003;dustPos[i3+1]+=v.y+Math.cos(elapsed*0.4+v.phase)*0.0002;
+      if(Math.abs(dustPos[i3])>1.8)dustPos[i3]*=-0.9;if(dustPos[i3+1]>2.5||dustPos[i3+1]<-1.5)v.y*=-1;
+    }
+    dustGeo.attributes.position.needsUpdate=true;
+  }
+  renderer.render(scene,camera);
+}
+requestAnimationFrame(animate);
+})();
+</script>
+</body>
+</html>
